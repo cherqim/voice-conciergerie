@@ -47,7 +47,7 @@ export async function textToSpeech(text: string, voiceId: string = 'EXAVITQaFPG1
 export async function speechToText(audioBuffer: Buffer): Promise<string> {
   const transcription = await elevenlabs.speechToText.convert({
     file: audioBuffer,
-    modelId: 'scribe_multilingual',
+    modelId: 'scribe_v2',
   });
   return transcription.text || '';
 }

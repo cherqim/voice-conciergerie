@@ -9,10 +9,11 @@ export interface Message {
   content: string;
 }
 
-export async function createClaudeMessage(messages: Message[]): Promise<string> {
+export async function createClaudeMessage(messages: Message[], systemPrompt?: string): Promise<string> {
   const response = await anthropic.messages.create({
     model: 'claude-sonnet-4-20250514',
     max_tokens: 1024,
+    system: systemPrompt,
     messages: messages.map(m => ({
       role: m.role as 'user' | 'assistant',
       content: m.content,
@@ -24,10 +25,11 @@ export async function createClaudeMessage(messages: Message[]): Promise<string> 
     : 'I apologize, but I could not process that request.';
 }
 
-export async function createClaudeStream(messages: Message[]) {
+export async function createClaudeStream(messages: Message[], systemPrompt?: string) {
   const stream = await anthropic.messages.stream({
     model: 'claude-sonnet-4-20250514',
     max_tokens: 1024,
+    system: systemPrompt,
     messages: messages.map(m => ({
       role: m.role as 'user' | 'assistant',
       content: m.content,

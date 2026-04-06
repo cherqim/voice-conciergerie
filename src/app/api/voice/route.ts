@@ -1,5 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClaudeMessage, type Message } from '@/lib/claude';
+import { speechToText, textToSpeech } from '@/lib/elevenlabs';
+
+const CONCIERGE_SYSTEM_PROMPT = `You are a helpful voice concierge assistant. You provide friendly, concise, and helpful responses.
+Keep your responses brief and conversational since they will be spoken aloud.
+Be polite and professional while maintaining a warm tone.
+If you don't understand something, ask for clarification briefly.`;
+
+function arrayBufferToBase64(buffer: Uint8Array): string {
+  let binary = '';
+  for (let i = 0; i < buffer.length; i++) {
+    binary += String.fromCharCode(buffer[i]);
+  }
+  return Buffer.from(binary, 'binary').toString('base64');
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -13,9 +27,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // For now, we'll transcribe using a simple approach
-    // In production, you'd use ElevenLabs Speech-to-Text or similar
-    const transcription = await transcribeAudio(audioFile);
+    const arrayBuffer = await audioFile.arrayBuffer();
+    const audioBuffer = Buffer.from(arrayBuffer);
+
+    const transcription = await speechToText(audioBuffer);
 
     // Build conversation history for context
     const messages: Message[] = [
@@ -25,17 +40,17 @@ export async function POST(request: NextRequest) {
       },
     ];
 
-    // Get Claude's response
-    const response = await createClaudeMessage(messages);
+    // Get Claude's response with system prompt context
+    const response = await createClaudeMessage(messages, CONCIERGE_SYSTEM_PROMPT);
 
-    // Generate audio response using ElevenLabs
-    // In a full implementation, you'd use ElevenLabs TTS here
-    // For now, return the text response
+    // Generate audio response using ElevenLabs TTS
+    const audioData = await textToSpeech(response);
+    const audioBase64 = arrayBufferToBase64(audioData);
 
     return NextResponse.json({
       transcription,
       response,
-      audioUrl: null, // Would contain audio URL from ElevenLabs TTS
+      audioData: audioBase64,
     });
   } catch (error) {
     console.error('Voice API error:', error);
@@ -44,17 +59,4 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   }
-}
-
-async function transcribeAudio(audioFile: File): Promise<string> {
-  // In production, use ElevenLabs STT or another provider
-  // For this implementation, we'll use a placeholder
-  // that would be replaced with actual STT integration
-  
-  // Simulate processing time
-  await new Promise(resolve => setTimeout(resolve, 500));
-  
-  // For demo purposes, return a placeholder
-  // In production: use ElevenLabs.speechToText() or similar
-  return "Voice message received";
 }

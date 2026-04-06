@@ -119,10 +119,20 @@ export default function VoiceAgent() {
       setStatus('speaking');
 
       // Play audio response if available
-      if (data.audioUrl) {
-        const audio = new Audio(data.audioUrl);
+      if (data.audioData) {
+        const binaryString = atob(data.audioData);
+        const bytes = new Uint8Array(binaryString.length);
+        for (let i = 0; i < binaryString.length; i++) {
+          bytes[i] = binaryString.charCodeAt(i);
+        }
+        const audioBlob = new Blob([bytes], { type: 'audio/mpeg' });
+        const audioUrl = URL.createObjectURL(audioBlob);
+        const audio = new Audio(audioUrl);
         audioRef.current = audio;
-        audio.onended = () => setStatus('idle');
+        audio.onended = () => {
+          setStatus('idle');
+          URL.revokeObjectURL(audioUrl);
+        };
         await audio.play();
       } else {
         setStatus('idle');
