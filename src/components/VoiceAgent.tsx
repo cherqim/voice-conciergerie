@@ -27,7 +27,26 @@ export default function VoiceAgent() {
   const startRecording = useCallback(async () => {
     try {
       setError(null);
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      
+      let stream: MediaStream;
+      
+      // Check for mediaDevices support
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        // Fallback for older browsers or restricted contexts
+        const getUserMedia = (navigator as any).getUserMedia || 
+                            (navigator as any).webkitGetUserMedia || 
+                            (navigator as any).mozGetUserMedia ||
+                            (navigator as any).msGetUserMedia;
+        if (!getUserMedia) {
+          throw new Error('Microphone not supported in this browser');
+        }
+        // Use legacy API
+        stream = await new Promise<MediaStream>((resolve, reject) => {
+          getUserMedia.call(navigator, { audio: true }, resolve, reject);
+        });
+      } else {
+        stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      }
       
       audioContextRef.current = new AudioContext();
       const source = audioContextRef.current.createMediaStreamSource(stream);
@@ -159,7 +178,7 @@ export default function VoiceAgent() {
       setMessages([{
         id: '0',
         role: 'assistant',
-        content: "Hello! I'm your voice concierge. I'm connected and ready to help. Click the microphone to start speaking.",
+        content: "Bienvenue ! Je suis Morokeys, votre concierge vocal. Cliquez sur le micro et posez-moi vos questions sur le riad ou la région.",
         timestamp: new Date(),
       }]);
     }
@@ -197,10 +216,10 @@ export default function VoiceAgent() {
         {/* Header */}
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold text-white mb-2">
-            Voice Concierge
+            Morokeys
           </h1>
           <p className="text-purple-200/80">
-            Your AI-powered voice assistant
+            Concierge vocal — MorokeysRiad, Beni Mellal
           </p>
         </div>
 
@@ -289,9 +308,9 @@ export default function VoiceAgent() {
         <p className="text-center text-white/60 text-sm mb-8">
           {isConnected 
             ? isRecording 
-              ? 'Release to send' 
-              : 'Click and hold to speak'
-            : 'Connect to start'}
+              ? 'Relâchez pour envoyer' 
+              : 'Cliquez et maintenez pour parler'
+            : 'Connectez-vous pour commencer'}
         </p>
 
         {/* Error message */}
@@ -312,7 +331,7 @@ export default function VoiceAgent() {
           
           {messages.length === 0 ? (
             <p className="text-white/40 text-sm text-center py-4">
-              Your conversation will appear here
+              Votre conversation apparaîtra ici
             </p>
           ) : (
             <div className="space-y-4">
@@ -342,9 +361,9 @@ export default function VoiceAgent() {
         {/* Powered by footer */}
         <div className="mt-6 text-center">
           <p className="text-white/40 text-xs">
-            Powered by{' '}
+            propulsé par{' '}
             <span className="text-purple-300">ElevenLabs</span> &{' '}
-            <span className="text-cyan-300">Claude</span>
+            <span className="text-cyan-300">MiniMax</span>
           </p>
         </div>
       </div>

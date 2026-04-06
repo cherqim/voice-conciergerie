@@ -14,7 +14,7 @@ export interface TextToSpeechResult {
   alignment?: unknown;
 }
 
-export async function textToSpeech(text: string, voiceId: string = 'EXAVITQaFPG1Mdcwbge3'): Promise<Uint8Array> {
+export async function textToSpeech(text: string, voiceId: string = 'EXAVITQu4vr4xnSDxMaL'): Promise<Uint8Array> {
   const response = await elevenlabs.textToSpeech.convert(voiceId, {
     text,
     modelId: 'eleven_multilingual_v2',
